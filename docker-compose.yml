@@ -1,0 +1,24 @@
+version: "3.7"
+services:
+  db:
+    image: "postgres:11"
+    container_name: "fab.postgres"
+    ports:
+      - "5432:5432"
+    volumes:
+      - fab:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=fab.crawler
+  crawler:
+    image: node:8
+    build: ./
+    volumes:
+      - .:/usr/src/service
+    working_dir: /usr/src/service
+    env_file: .env
+    entrypoint: node index.js --csv app/import.example.csv
+    depends_on:
+      - db
+
+volumes:
+  fab:
