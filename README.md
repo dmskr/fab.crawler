@@ -4,12 +4,16 @@
 To simplify the setup everything is packed into docker compose. Run the command to build images and run the crawler:
 
 ```
+git clone git@github.com:dmskr/fab.crawler.git
+cd fab.crawler
 docker-compose up --build
 ```
 
 ## Install (long version)
 
 ```
+git clone git@github.com:dmskr/fab.crawler.git
+cd fab.crawler
 npm install
 ```
 edit `.env` file and set your own credentials.
