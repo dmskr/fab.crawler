@@ -14,6 +14,8 @@ const S3 = new AWS.S3({
 
 exports.import = (lines) => {
   return Image.sequelize.sync().then(() => {
+    const successes = [];
+    const errors = [];
     return Promise.map(lines, (line, index) => {
       return exports.fetch(line)
         .then((image) => {
@@ -26,20 +28,33 @@ exports.import = (lines) => {
           });
         })
         .then((result) => {
-          console.log(`${index}: ${result.key} ${result.record}@${result.organization} uploaded successfully`);
+          const message = `${index}: ${result.key} ${result.record}@${result.organization} uploaded successfully`;
+          console.log(message);
+          successes.push(message);
         })
         .catch((err) => {
           if (err instanceof URIError) {
-            console.error(`${index}: ${line.key} ${line.record}@${line.organization} fetch failed due to wrong URL. Details: ${err}: ${line.url}`);
+            const message = `${index}: ${line.key} ${line.record}@${line.organization} fetch failed due to wrong URL. Details: ${err}: ${line.url}`;
+            errors.push(message);
+            console.error(message);
             return; 
           }
           if (err instanceof HTTPError) {
-            console.error(`${index}: ${line.key} ${line.record}@${line.organization} fetch failed with ${err.message.match(/\nStatus.+\r/)[0].replace(/\n/, '')}`);
+            const message = `${index}: ${line.key} ${line.record}@${line.organization} fetch failed with ${err.message.match(/\nStatus.+\r/)[0].replace(/\n/, '')}`;
+            errors.push(message);
+            console.error(message);
             return;
           }
           throw err; // Unknown error
         });
-    }, { concurrency: 3 });
+    }, { concurrency: 3 }).then(() => {
+      console.log(''.padEnd(25, '.'));
+      console.log(`${successes.length} images imported successfully.`)
+      if (errors.length) {
+        console.log(`${errors.length} images failed with errors:`);
+        errors.forEach(console.error);
+      }
+    });
   });
 }
 
